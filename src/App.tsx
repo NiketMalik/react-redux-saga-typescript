@@ -1,26 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import createSagaMiddleware, { SagaMiddleware } from "redux-saga";
+import { Provider } from "react-redux";
+import {
+  Store,
+  StoreEnhancer,
+  applyMiddleware,
+  compose,
+  createStore,
+} from "redux";
+
+import LanguageSelector from "./components/LanguageSelector";
+import LanguageDetails from "./components/LanguageDetails";
+import reducers from "./reducers";
+import sagas from "./sagas";
+
+import "./static/scss/app.scss";
+
+declare global {
+  interface Window {
+    __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: typeof compose;
+  }
 }
 
-export default App;
+/** @desc saga middleware */
+const sagaMiddleware: SagaMiddleware<object> = createSagaMiddleware();
+/** @desc redux middleware composer */
+const composeEnhancers: <Func>(a: Func) => Func =
+  (process.env.NODE_ENV !== "production" &&
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) ||
+  compose;
+/** @desc redux middleware composer */
+const store: Store = createStore(
+  reducers,
+  composeEnhancers<StoreEnhancer>(
+    applyMiddleware<StoreEnhancer>(sagaMiddleware)
+  )
+);
+
+sagaMiddleware.run(sagas);
+
+export default function App(): React.ReactElement<{}> {
+  return (
+    <Provider store={store}>
+      <LanguageSelector />
+      <LanguageDetails />
+    </Provider>
+  );
+}
